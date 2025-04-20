@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0" 
+  />
+  <title>두바이환율 조회기</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #f9f9f9;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    h1 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    label, button, p {
+      display: block;
+      width: 100%;
+    }
+    input[type="date"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 0.6rem;
+      font-size: 1rem;
+      background: #0070f3;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: default;
+    }
+    .result {
+      margin-top: 1rem;
+      font-size: 1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>두바이 AED↔KRW 환율 조회</h1>
+    <label for="date">조회 날짜 선택</label>
+    <input type="date" id="date" max="" />
+    <button id="fetchBtn">조회</button>
+    <p class="result" id="result">날짜를 선택하고 조회 버튼을 눌러주세요.</p>
+  </div>
+
+  <script>
+    // 오늘 날짜를 기본값 및 최대값으로 설정
+    const dateInput = document.getElementById('date');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+    dateInput.max = today;
+
+    const btn = document.getElementById('fetchBtn');
+    const resultEl = document.getElementById('result');
+
+    btn.addEventListener('click', async () => {
+      const date = dateInput.value;
+      if (!date) return;
+      btn.disabled = true;
+      resultEl.textContent = '조회 중…';
+
+      try {
+        // exchangerate.host 무료 API 사용
+        const res = await fetch(`https://api.exchangerate.host/${date}?base=AED&symbols=KRW`);
+        const data = await res.json();
+        if (data && data.rates && data.rates.KRW) {
+          const rate = data.rates.KRW.toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+          resultEl.innerHTML = 
+            `<strong>${date}</strong> 기준<br>
+             1 AED = <strong>${rate} KRW</strong>`;
+        } else {
+          resultEl.textContent = '환율 정보를 가져올 수 없습니다.';
+        }
+      } catch (err) {
+        console.error(err);
+        resultEl.textContent = '네트워크 오류가 발생했습니다.';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
